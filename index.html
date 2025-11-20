@@ -1,0 +1,2316 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Video Streaming Platform Simplified</title>
+<style>
+* {
+margin: 0;
+padding: 0;
+box-sizing: border-box;
+}
+
+body {
+font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+background-color: #000;
+color: #fff;
+overflow-x: hidden;
+}
+
+/* --- SPLASH SCREEN STYLES (REMOVED) --- */
+.splash-screen {
+display: none !important;
+}
+
+.app-container {
+/* Max width for mobile-first design */
+max-width: 480px;
+margin: 0 auto;
+background-color: #000;
+min-height: 100vh;
+position: relative;
+padding-bottom: 70px;
+box-shadow: 0 0 30px rgba(255, 255, 255, 0.05);
+}
+
+/* --- Featured Section (REDUCED SIZE & CAROUSEL) --- */
+.featured-section {
+position: relative;
+height: 320px;
+margin-bottom: 2rem;
+overflow: hidden;
+border-bottom-left-radius: 1.5rem;
+border-bottom-right-radius: 1.5rem;
+}
+
+/* CAROUSEL STYLES */
+.carousel-slide-container {
+width: 100%;
+height: 100%;
+position: relative;
+overflow: hidden;
+}
+
+.carousel-track {
+display: flex;
+height: 100%;
+transition: transform 0.5s ease-in-out;
+}
+
+.carousel-slide {
+flex-shrink: 0;
+position: relative;
+height: 100%;
+}
+
+/* The featured-bg now supports a background image but uses a gradient fallback */
+.featured-bg {
+position: absolute;
+inset: 0;
+background-size: cover;
+background-position: center;
+background-repeat: no-repeat;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+/* CRITICAL FIX: The background will try to load the image first, then fall back to the gradient defined by the class. */
+background-image: var(--bg-image, none);
+}
+
+.featured-bg-text {
+font-size: 8rem;
+font-weight: 900;
+opacity: 0.2;
+color: white;
+text-shadow: 0 0 10px rgba(0,0,0,0.5);
+z-index: 1; /* Keep text visible under overlay */
+}
+
+.featured-overlay {
+position: absolute;
+inset: 0;
+/* Added stronger overlay at the bottom for readability */
+background: linear-gradient(to top, #000 0%, rgba(0,0,0,0.5) 70%, transparent 100%);
+z-index: 5; /* Above background and text, below content */
+}
+
+.featured-content {
+position: absolute;
+inset: 0;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: flex-end;
+text-align: center;
+padding: 1rem;
+padding-bottom: 2.5rem;
+z-index: 10; /* Ensure content is above overlay */
+}
+
+.featured-title {
+font-size: 2.25rem;
+font-weight: 800;
+background: linear-gradient(to right, #f97316, #ef4444);
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+background-clip: text;
+margin-bottom: 0.75rem;
+text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+/* Indicators */
+.carousel-indicators {
+position: absolute;
+bottom: 0.75rem;
+left: 50%;
+transform: translateX(-50%);
+display: flex;
+gap: 0.5rem;
+z-index: 20;
+}
+
+.indicator-dot {
+width: 0.5rem;
+height: 0.5rem;
+background: rgba(255, 255, 255, 0.4);
+border-radius: 50%;
+cursor: pointer;
+transition: all 0.3s;
+}
+
+.indicator-dot.active {
+background: white;
+width: 1.5rem;
+border-radius: 9999px;
+}
+
+.featured-buttons {
+display: flex;
+gap: 0.75rem;
+}
+
+.btn-watch {
+background: linear-gradient(to right, #3b82f6, #6366f1);
+color: white;
+padding: 0.75rem 1.5rem;
+border-radius: 9999px;
+font-weight: 600;
+display: flex;
+align-items: center;
+gap: 0.5rem;
+border: none;
+cursor: pointer;
+transition: all 0.3s;
+box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4);
+}
+
+.btn-watch:hover {
+background: linear-gradient(to right, #2563eb, #4f46e5);
+}
+
+.btn-add {
+background: rgba(31, 41, 55, 0.7);
+color: white;
+padding: 0.75rem;
+border-radius: 9999px;
+border: 1px solid rgba(255, 255, 255, 0.2);
+cursor: pointer;
+transition: all 0.3s;
+}
+
+.btn-add:hover {
+background: rgba(31, 41, 55, 0.9);
+}
+
+.btn-add.in-list {
+color: #4ade80;
+border-color: #4ade80;
+}
+
+/* Sections */
+.section {
+padding: 0 1rem;
+margin-bottom: 2rem;
+}
+
+.section-title {
+font-size: 1.25rem;
+font-weight: 700;
+margin-bottom: 1rem;
+color: #e5e7eb;
+}
+
+.recent-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 1rem;
+}
+
+.btn-clear {
+background: none;
+border: none;
+color: #f87171;
+font-size: 0.875rem;
+cursor: pointer;
+padding: 0.5rem;
+transition: color 0.3s;
+}
+
+.btn-clear:hover {
+color: #ef4444;
+}
+
+.movie-row {
+display: flex;
+gap: 0.75rem;
+overflow-x: scroll;
+padding-bottom: 1rem;
+scrollbar-width: none;
+-webkit-overflow-scrolling: touch;
+}
+
+.movie-row::-webkit-scrollbar {
+display: none;
+}
+
+/* --- Video Card Sizes --- */
+.movie-card {
+flex-shrink: 0;
+cursor: pointer;
+position: relative;
+}
+
+.movie-card.medium {
+width: 8.5rem;
+}
+
+.movie-card.small {
+width: 7.5rem;
+}
+
+.movie-card-inner {
+width: 100%;
+height: 12rem;
+border-radius: 0.75rem;
+overflow: hidden;
+position: relative;
+box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+}
+
+.movie-card.small .movie-card-inner {
+height: 10rem;
+}
+
+.movie-card-bg {
+width: 100%;
+height: 100%;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+padding: 1rem;
+color: white;
+transition: transform 0.3s;
+background-size: cover;
+background-position: center;
+background-repeat: no-repeat;
+/* CRITICAL FIX: Image URL + Gradient Fallback */
+background-image: var(--bg-image, none);
+}
+
+.movie-card-inner:hover .movie-card-bg {
+transform: scale(1.05);
+}
+
+.movie-initial {
+font-size: 2.5rem;
+font-weight: bold;
+margin-bottom: 0.5rem;
+opacity: 0.8;
+/* Ensure text is visible over background image */
+text-shadow: 0 0 5px rgba(0, 0, 0, 1);
+}
+
+.movie-card.small .movie-initial {
+font-size: 1.8rem;
+}
+
+.movie-title-card {
+text-align: center;
+font-size: 0.75rem;
+font-weight: 600;
+/* Ensure text is visible over background image */
+text-shadow: 0 0 5px rgba(0, 0, 0, 1);
+}
+
+.movie-card-add-btn {
+position: absolute;
+top: 0.5rem;
+right: 0.5rem;
+background: rgba(0, 0, 0, 0.6);
+padding: 0.4rem;
+border-radius: 9999px;
+border: none;
+cursor: pointer;
+opacity: 1;
+transition: all 0.3s;
+z-index: 5;
+color: white;
+}
+
+.movie-card-add-btn:hover {
+background: rgba(0, 0, 0, 0.9);
+}
+
+.movie-card-play {
+position: absolute;
+inset: 0;
+display: flex;
+align-items: center;
+justify-content: center;
+background: rgba(0, 0, 0, 0);
+transition: all 0.3s;
+pointer-events: none;
+z-index: 5;
+}
+
+.movie-card-inner:hover .movie-card-play {
+background: rgba(0, 0, 0, 0.3);
+}
+
+.play-icon-large {
+opacity: 0;
+transition: opacity 0.3s;
+pointer-events: none;
+}
+
+.movie-card-inner:hover .play-icon-large {
+opacity: 1;
+}
+
+.movie-info {
+margin-top: 0.5rem;
+}
+
+.movie-title {
+color: white;
+font-size: 0.875rem;
+font-weight: 500;
+overflow: hidden;
+text-overflow: ellipsis;
+white-space: nowrap;
+}
+
+.movie-duration {
+color: #9ca3af;
+font-size: 0.75rem;
+}
+
+/* Progress Bar */
+.progress-container {
+position: absolute;
+bottom: 0;
+left: 0;
+right: 0;
+padding: 0.5rem;
+pointer-events: none;
+}
+
+.progress-wrapper {
+background: rgba(17, 24, 39, 0.7);
+border-radius: 0.25rem;
+padding: 0.25rem 0.5rem;
+}
+
+.progress-bar {
+width: 100%;
+background: #374151;
+height: 0.25rem;
+border-radius: 9999px;
+margin-bottom: 0.25rem;
+}
+
+.progress-fill {
+background: #3b82f6;
+height: 0.25rem;
+border-radius: 9999px;
+}
+
+.time-left {
+font-size: 0.75rem;
+color: white;
+text-align: right;
+}
+
+/* --- Collection Card (Horizontal Scroll & Expandable) --- */
+.collection-row {
+display: flex;
+gap: 0.75rem;
+overflow-x: scroll;
+padding-bottom: 1rem;
+scrollbar-width: none;
+-webkit-overflow-scrolling: touch;
+}
+
+.collection-row::-webkit-scrollbar {
+display: none;
+}
+
+.collection-card {
+flex-shrink: 0;
+width: 80%;
+max-width: 320px;
+background: linear-gradient(to bottom right, #1e3a8a, #1e40af);
+border-radius: 0.75rem;
+padding: 1rem;
+box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+transition: all 0.4s ease-in-out;
+margin-bottom: 0.5rem;
+}
+
+.collection-card.expanded {
+width: calc(100% + 2rem);
+max-width: 480px;
+flex-shrink: 1;
+margin-left: -1rem;
+margin-right: -1rem;
+}
+
+.collection-title {
+color: white;
+font-size: 1.125rem;
+font-weight: 700;
+margin-bottom: 0.75rem;
+}
+
+.collection-items {
+display: flex;
+flex-direction: column;
+gap: 0.75rem;
+max-height: 25rem;
+overflow: hidden;
+transition: max-height 0.4s ease-in-out;
+}
+
+.collection-card.expanded .collection-items {
+max-height: 500px;
+}
+
+.collection-item {
+display: flex;
+gap: 0.75rem;
+cursor: pointer;
+padding: 0.5rem;
+border-radius: 0.5rem;
+transition: all 0.3s;
+}
+
+.collection-item:hover {
+background: rgba(255, 255, 255, 0.1);
+}
+
+.collection-thumb {
+width: 6rem;
+height: 4rem;
+border-radius: 0.25rem;
+flex-shrink: 0;
+display: flex;
+align-items: center;
+justify-content: center;
+}
+
+.collection-thumb-text {
+color: white;
+font-weight: bold;
+font-size: 1.25rem;
+}
+
+.collection-item-info {
+flex: 1;
+}
+
+.collection-item-title {
+color: white;
+font-weight: 600;
+}
+
+.collection-item-meta {
+color: #d1d5db;
+font-size: 0.875rem;
+}
+
+.view-more {
+width: 100%;
+text-align: center;
+color: #93c5fd;
+margin-top: 0.75rem;
+padding: 0.5rem;
+background: none;
+border: none;
+cursor: pointer;
+font-weight: 600;
+}
+
+.view-more:hover {
+color: #bfdbdb;
+}
+
+/* --- ALL VIDEOS PAGE STYLES (GRID VIEW) --- */
+.all-videos-container {
+padding: 1rem;
+padding-bottom: 5rem;
+}
+.page-header {
+display: flex;
+align-items: center;
+margin-bottom: 1rem;
+padding: 0 0 0.5rem 0;
+}
+.back-btn {
+background: none;
+border: none;
+color: white;
+cursor: pointer;
+margin-right: 1rem;
+padding: 0.5rem;
+}
+.page-title {
+font-size: 1.5rem;
+font-weight: 700;
+}
+
+/* Grid for all videos page */
+.all-videos-grid {
+display: grid;
+grid-template-columns: repeat(3, 1fr);
+gap: 0.75rem;
+}
+
+/* Custom card for the All Videos Grid */
+.grid-card {
+cursor: pointer;
+position: relative;
+}
+.grid-card-inner {
+width: 100%;
+height: 10rem;
+border-radius: 0.75rem;
+overflow: hidden;
+position: relative;
+box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+}
+.grid-card-info {
+margin-top: 0.5rem;
+}
+.grid-card-title {
+color: white;
+font-size: 0.75rem;
+font-weight: 500;
+overflow: hidden;
+text-overflow: ellipsis;
+/* FIX: Corrected line clamp properties */
+display: -webkit-box;
+-webkit-line-clamp: 2;
+-webkit-box-orient: vertical;
+white-space: normal;
+line-height: 1.3;
+}
+/* End All Videos Grid Styles */
+
+/* --- PHOTOGRAPHY SHOWCASE --- */
+.photography-row {
+display: flex;
+gap: 0.75rem;
+overflow-x: scroll;
+padding-bottom: 1rem;
+scrollbar-width: none;
+-webkit-overflow-scrolling: touch;
+}
+
+.photography-row::-webkit-scrollbar {
+display: none;
+}
+
+.photo-card {
+flex-shrink: 0;
+width: 10rem;
+cursor: pointer;
+}
+
+.photo-card-inner {
+width: 10rem; /* Fixed width */
+height: 13.33rem; /* 3:4 ratio based on 10rem width */
+border-radius: 0.75rem;
+overflow: hidden;
+position: relative;
+box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+background-size: cover;
+background-position: center;
+background-repeat: no-repeat;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+text-align: center;
+/* Image URL + Gradient Fallback */
+background-image: var(--bg-image, none);
+}
+
+/* Fallback for Image */
+.photo-card-fallback-text {
+font-size: 3rem;
+font-weight: 900;
+opacity: 0.2;
+color: white;
+text-shadow: 0 0 5px rgba(0, 0, 0, 1);
+}
+
+.photo-card-content {
+position: absolute;
+bottom: 0;
+left: 0;
+right: 0;
+z-index: 2;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: flex-end;
+padding: 1rem;
+color: white;
+text-align: center;
+}
+
+/* Added Like button container */
+.photo-card-actions {
+position: absolute;
+top: 0.5rem;
+right: 0.5rem;
+z-index: 3;
+}
+
+.photo-card-like-btn {
+background: rgba(0, 0, 0, 0.6);
+padding: 0.4rem;
+border-radius: 9999px;
+border: none;
+cursor: pointer;
+color: white;
+transition: color 0.3s;
+}
+
+.photo-card-like-btn.liked {
+color: #ef4444; /* Red for liked */
+}
+
+.photo-card-inner:before {
+content: '';
+position: absolute;
+inset: 0;
+z-index: 1;
+background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, transparent 50%);
+}
+
+.photo-card-title {
+font-size: 1rem;
+font-weight: 600;
+margin-top: 0.5rem;
+}
+
+.photo-card-meta {
+font-size: 0.75rem;
+color: rgba(255, 255, 255, 0.7);
+}
+/* --- END PHOTOGRAPHY SHOWCASE --- */
+
+/* --- PHOTO VIEWER MODAL --- */
+.photo-viewer-modal {
+position: fixed;
+inset: 0;
+background: #000;
+z-index: 100;
+display: flex;
+align-items: center;
+justify-content: center;
+padding: 0;
+}
+
+.photo-viewer-content {
+width: 100%;
+height: 100%;
+position: relative;
+display: flex;
+align-items: center;
+justify-content: center;
+}
+
+.photo-display-container {
+/* Full container size on mobile */
+width: 100%;
+height: 100%;
+position: relative;
+display: flex;
+align-items: center;
+justify-content: center;
+padding: 2rem; /* Give some breathing room */
+}
+
+/* New wrapper to enforce 3:4 aspect ratio */
+.photo-viewer-image-wrapper {
+max-width: 100%;
+max-height: 100%;
+width: auto;
+height: auto;
+
+/* Logic to center and fit the 3:4 ratio */
+display: flex;
+align-items: center;
+justify-content: center;
+}
+
+.photo-viewer-image {
+/* This div enforces the 3:4 ratio: 4/3 = 133.33% */
+width: 100%;
+max-width: 75vh; /* Prevents being too wide on landscape */
+padding-top: 133.33%; /* Aspect ratio hack (3:4 portrait) */
+position: relative;
+background-size: cover;
+background-position: center;
+background-repeat: no-repeat;
+border-radius: 0.5rem;
+box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+overflow: hidden;
+/* Image URL + Gradient Fallback */
+background-image: var(--bg-image, none);
+}
+
+.photo-viewer-placeholder-content {
+position: absolute;
+inset: 0;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+font-size: 5rem;
+font-weight: 900;
+opacity: 0.1;
+color: #1f2937;
+}
+
+.photo-viewer-metadata {
+position: absolute;
+bottom: 0;
+left: 0;
+right: 0;
+padding: 2rem 1rem 1rem;
+background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, transparent 100%);
+opacity: 1;
+transition: opacity 0.5s ease;
+z-index: 10; /* Above the image */
+}
+
+.photo-viewer-title {
+font-size: 1.5rem;
+font-weight: 700;
+color: white;
+margin-bottom: 0.25rem;
+}
+
+.photo-viewer-date {
+font-size: 1rem;
+color: #9ca3af;
+}
+
+.photo-viewer-close {
+position: absolute;
+top: 2rem;
+left: 1rem;
+background: rgba(31, 41, 55, 0.7);
+padding: 0.5rem;
+border-radius: 9999px;
+border: none;
+cursor: pointer;
+z-index: 110;
+color: white;
+opacity: 1;
+transition: opacity 0.5s ease;
+}
+
+/* --- VIDEO PLAYER MODAL (Full Screen) --- */
+.video-player-modal {
+position: fixed;
+inset: 0;
+background: #000;
+z-index: 120;
+/* Occupies the entire viewport */
+width: 100vw;
+height: 100vh;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+}
+
+.video-player-frame-container {
+position: relative;
+width: 100%;
+height: 100%; /* Take up the rest of the height */
+padding-top: 0; /* No padding hack needed if height is 100% */
+background: #111;
+}
+
+.video-player-frame-container iframe {
+position: absolute;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+border: none;
+}
+
+.player-close-btn {
+position: absolute;
+top: 1rem;
+left: 1rem;
+background: rgba(0, 0, 0, 0.5);
+padding: 0.5rem;
+border-radius: 9999px;
+color: white;
+border: none;
+cursor: pointer;
+z-index: 130;
+}
+.player-close-btn:hover {
+background: rgba(0, 0, 0, 0.8);
+}
+/* --- END VIDEO PLAYER MODAL --- */
+
+
+/* Bottom Navigation */
+.bottom-nav {
+position: fixed;
+bottom: 0;
+left: 0;
+right: 0;
+background: #000;
+border-top: 1px solid #1f2937;
+max-width: 480px;
+margin: 0 auto;
+z-index: 10;
+}
+
+.nav-items {
+display: flex;
+justify-content: space-around;
+align-items: center;
+padding: 0.5rem 0;
+}
+
+.nav-item {
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 0.25rem;
+padding: 0 1rem;
+background: none;
+border: none;
+cursor: pointer;
+color: #6b7280;
+transition: color 0.3s;
+}
+
+.nav-item.active {
+color: #3b82f6;
+}
+
+.nav-text {
+font-size: 0.75rem;
+}
+
+/* Search Page */
+.search-container {
+padding: 1rem;
+padding-bottom: 5rem;
+}
+
+.search-input-wrapper {
+position: relative;
+margin-bottom: 1.5rem;
+}
+
+.search-icon {
+position: absolute;
+left: 0.75rem;
+top: 50%;
+transform: translateY(-50%);
+color: #9ca3af;
+}
+
+.search-input {
+width: 100%;
+background: #1f2937;
+color: white;
+padding: 0.75rem 1rem 0.75rem 2.5rem;
+border-radius: 0.5rem;
+border: none;
+outline: none;
+}
+
+.search-input:focus {
+outline: 2px solid #3b82f6;
+box-shadow: 0 0 0 1px #3b82f6;
+}
+
+.search-results-title {
+color: white;
+font-size: 1.125rem;
+font-weight: 600;
+margin-bottom: 1rem;
+}
+
+.popular-searches {
+display: flex;
+flex-direction: column;
+gap: 0.5rem;
+}
+
+.genre-btn {
+width: 100%;
+background: #1f2937;
+color: white;
+text-align: left;
+padding: 0.75rem 1rem;
+border-radius: 0.5rem;
+border: none;
+cursor: pointer;
+transition: background 0.3s;
+}
+
+.genre-btn:hover {
+background: #374151;
+}
+
+.no-results {
+text-align: center;
+color: #9ca3af;
+margin-top: 2rem;
+}
+
+.empty-state {
+text-align: center;
+color: #9ca3af;
+margin-top: 2rem;
+padding: 1rem;
+}
+
+.empty-icon {
+width: 4rem;
+height: 4rem;
+margin: 0 auto 1rem;
+opacity: 0.5;
+}
+
+/* --- Modal (Full-Page Overlay for mobile) --- */
+.modal-overlay {
+position: fixed;
+inset: 0;
+background: #000;
+z-index: 50;
+display: flex;
+align-items: flex-start;
+justify-content: center;
+padding: 0;
+}
+
+.modal-content {
+background: #000;
+border-radius: 0;
+max-width: 480px;
+width: 100%;
+height: 100vh;
+overflow-y: auto;
+position: relative;
+}
+
+.modal-header {
+position: relative;
+}
+
+.modal-close {
+position: absolute;
+top: 1.5rem;
+left: 1rem;
+right: auto;
+background: rgba(31, 41, 55, 0.7);
+padding: 0.5rem;
+border-radius: 9999px;
+border: none;
+cursor: pointer;
+z-index: 60;
+color: white;
+}
+
+.modal-close:hover {
+background: rgba(31, 41, 55, 0.9);
+}
+
+.modal-hero {
+width: 100%;
+height: 12rem;
+display: flex;
+align-items: center;
+justify-content: center;
+/* Supports landscape image src */
+background-size: cover;
+background-position: center;
+background-repeat: no-repeat;
+/* Image URL + Gradient Fallback */
+background-image: var(--bg-image, none);
+}
+
+.modal-hero-text {
+font-size: 4rem;
+font-weight: bold;
+color: white;
+opacity: 0.5;
+z-index: 5;
+text-shadow: 0 0 10px rgba(0, 0, 0, 1);
+}
+
+.modal-body {
+padding: 1.5rem;
+}
+
+.modal-title {
+font-size: 1.875rem;
+font-weight: bold;
+color: white;
+margin-bottom: 0.5rem;
+}
+
+.modal-meta {
+display: flex;
+align-items: center;
+gap: 1rem;
+color: #9ca3af;
+font-size: 0.875rem;
+margin-bottom: 1rem;
+}
+
+.modal-buttons {
+display: flex;
+gap: 0.75rem;
+margin-bottom: 1.5rem;
+}
+
+.modal-btn-watch {
+flex: 1;
+background: linear-gradient(to right, #3b82f6, #6366f1);
+color: white;
+padding: 0.75rem 1.5rem;
+border-radius: 9999px;
+font-weight: 600;
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 0.5rem;
+border: none;
+cursor: pointer;
+box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4);
+}
+
+.modal-btn-watch:hover {
+background: linear-gradient(to right, #2563eb, #4f46e5);
+}
+
+.modal-btn-add {
+background: #1f2937;
+color: white;
+padding: 0.75rem;
+border-radius: 9999px;
+border: none;
+cursor: pointer;
+border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.modal-btn-add:hover {
+background: #374151;
+}
+
+.modal-btn-add.in-list {
+color: #4ade80;
+border-color: #4ade80;
+}
+
+.modal-section {
+margin-bottom: 1rem;
+}
+
+.modal-section-title {
+color: white;
+font-weight: 700;
+font-size: 1rem;
+margin-bottom: 0.5rem;
+}
+
+.language-tags {
+display: flex;
+flex-wrap: wrap;
+gap: 0.5rem;
+}
+
+.language-tag {
+background: #1f2937;
+color: #d1d5db;
+padding: 0.25rem 0.75rem;
+border-radius: 9999px;
+font-size: 0.875rem;
+}
+
+.modal-description {
+color: #9ca3af;
+font-size: 0.875rem;
+line-height: 1.4;
+}
+
+.hidden {
+display: none;
+}
+
+/* Icons */
+.icon {
+width: 1.5rem;
+height: 1.5rem;
+stroke: currentColor;
+fill: none;
+stroke-width: 2;
+}
+
+.icon-fill {
+fill: currentColor;
+}
+
+.icon-sm {
+width: 1rem;
+height: 1rem;
+}
+
+.icon-lg {
+width: 3rem;
+height: 3rem;
+}
+
+/* Gradients (Kept as is, since they are crucial for the visual identity) */
+.bg-gradient-1 { background: linear-gradient(to bottom right, #f43f5e, #fda47e); }
+.bg-gradient-2 { background: linear-gradient(to bottom right, #facc15, #84cc16); }
+.bg-gradient-3 { background: linear-gradient(to bottom right, #374151, #111827); }
+.bg-gradient-4 { background: linear-gradient(to bottom right, #06b6d4, #3b82f6); }
+.bg-gradient-5 { background: linear-gradient(to bottom right, #fb923c, #ea580c); }
+.bg-gradient-6 { background: linear-gradient(to bottom right, #22c55e, #059669); }
+.bg-gradient-7 { background: linear-gradient(to bottom right, #ea580c, #dc2626); }
+.bg-gradient-8 { background: linear-gradient(to bottom right, #9d174d, #be185d); }
+.bg-gradient-9 { background: linear-gradient(to bottom right, #4c1d95, #7c3aed); }
+.bg-gradient-10 { background: linear-gradient(to bottom right, #1d4ed8, #3b82f6); }
+</style>
+</head>
+<body>
+
+<!-- --- SPLASH SCREEN (REMOVED) --- -->
+<div id="splashScreen" class="splash-screen">
+<div id="splashProfileIcon" class="splash-profile-icon">AD</div>
+<div class="splash-spinner"></div>
+<div class="splash-text">@adillpt</div>
+</div>
+<!-- --- END SPLASH SCREEN --- -->
+
+<div class="app-container">
+<!-- Home Page -->
+<div id="homePage">
+<!-- Featured Section will be inserted here -->
+</div>
+
+<!-- All Videos Page (New dedicated page for list view) -->
+<div id="allVideosPage" class="all-videos-container hidden">
+<div class="page-header">
+<button class="back-btn" onclick="showPage('home')">
+<svg class="icon" viewBox="0 0 24 24">
+<polyline points="15 18 9 12 15 6"></polyline>
+</svg>
+</button>
+<h2 class="page-title">All Videos</h2>
+</div>
+<div id="allVideosGrid" class="all-videos-grid">
+<!-- All videos rendered here in a grid -->
+</div>
+</div>
+
+<!-- Search Page -->
+<div id="searchPage" class="search-container hidden">
+<div class="search-input-wrapper">
+<svg class="icon search-icon" viewBox="0 0 24 24">
+<circle cx="11" cy="11" r="8"></circle>
+<path d="m21 21-4.35-4.35"></path>
+</svg>
+<input type="text" id="searchInput" class="search-input" placeholder="Search videos, genres...">
+</div>
+<!-- Search results are now rendered here as a horizontal row -->
+<div id="searchResults"></div>
+</div>
+
+<!-- Recent Page -->
+<div id="recentPage" class="search-container hidden">
+<!-- Content will be generated by renderRecentPage -->
+<div id="historyList"></div>
+<div id="myListSection"></div>
+</div>
+
+<!-- Bottom Navigation -->
+<div class="bottom-nav">
+<div class="nav-items">
+<button class="nav-item active" onclick="showPage('home')">
+<svg class="icon" viewBox="0 0 24 24">
+<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+<polyline points="9 22 9 12 15 12 15 22"></polyline>
+</svg>
+<span class="nav-text">Home</span>
+</button>
+<button class="nav-item" onclick="showPage('search')">
+<svg class="icon" viewBox="0 0 24 24">
+<circle cx="11" cy="11" r="8"></circle>
+<path d="m21 21-4.35-4.35"></path>
+</svg>
+<span class="nav-text">Search</span>
+</button>
+<button class="nav-item" onclick="showPage('recent')">
+<svg class="icon" viewBox="0 0 24 24">
+<circle cx="12" cy="12" r="10"></circle>
+<polyline points="12 6 12 12 16 14"></polyline>
+</svg>
+<span class="nav-text">Recent</span>
+</button>
+</div>
+</div>
+</div>
+
+<!-- Modal (Full-Page Overlay for Video Details) -->
+<div id="movieModal" class="modal-overlay hidden">
+<div class="modal-content">
+<div class="modal-header">
+<!-- Close button changed to a back arrow (left side) -->
+<button class="modal-close" onclick="closeModal()">
+<svg class="icon" viewBox="0 0 24 24">
+<polyline points="15 18 9 12 15 6"></polyline>
+</svg>
+</button>
+<div id="modalHero" class="modal-hero"></div>
+</div>
+<div class="modal-body" id="modalBody"></div>
+</div>
+</div>
+
+<!-- Video Player Modal (Full-screen for playback) -->
+<div id="videoPlayerModal" class="video-player-modal hidden">
+<button class="player-close-btn" onclick="closeVideoPlayer()">
+<svg class="icon" viewBox="0 0 24 24">
+<polyline points="15 18 9 12 15 6"></polyline>
+</svg>
+</button>
+<div class="video-player-frame-container">
+<!-- Fullscreen option added here -->
+<iframe id="videoIframe" src="" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>
+</div>
+</div>
+
+<!-- Photo Viewer Modal (Simple Full-Screen Image Display) -->
+<div id="photoViewerModal" class="photo-viewer-modal hidden">
+<div id="photoViewerContent" class="photo-viewer-content">
+<button id="photoViewerCloseButton" class="photo-viewer-close" onclick="closePhotoViewer()">
+<svg class="icon" viewBox="0 0 24 24">
+<polyline points="15 18 9 12 15 6"></polyline>
+</svg>
+</button>
+<div id="photoDisplayContainer" class="photo-display-container">
+<div class="photo-viewer-image-wrapper" id="photoViewerImageWrapper">
+<div id="photoViewerImage" class="photo-viewer-image">
+<div class="photo-viewer-placeholder-content">
+<span>PHOTO</span>
+<span style="font-size: 1rem; opacity: 0.8;">3024 x 4032</span>
+</div>
+</div>
+</div>
+</div>
+<div id="photoViewerMetadata" class="photo-viewer-metadata">
+<!-- Title and Date go here -->
+</div>
+</div>
+</div>
+
+<script>
+// --- CONSTANTS ---
+const FADE_DURATION = 3000; // 3 seconds before controls fade
+
+// Global Data and State
+let watchHistory = [];
+let myList = [];
+let videos = [];
+let likedPhotos = [];
+let currentPage = 'home';
+
+// Carousel State
+let featuredVideos = [];
+let currentSlideIndex = 0;
+let carouselInterval;
+
+// Photo Viewer State
+let hideControlsTimeout;
+
+
+// Define collection data (Filters operate on the main 'videos' array)
+const collectionsData = [
+{
+id: 'allVideos',
+title: 'All Videos',
+color: 'linear-gradient(to bottom right, #1e3a8a, #1e40af)',
+filter: (m) => !m.isPhoto,
+isFullPage: true,
+limit: 3
+},
+{
+id: 2,
+title: 'Action Montage Edits',
+color: 'linear-gradient(to bottom right, #dc2626, #f97316)',
+filter: (m) => m.genre && m.genre.includes('Action') && !m.isPhoto,
+isFullPage: false,
+limit: 3
+},
+{
+id: 3,
+title: 'Ambient & Relaxing Scores',
+color: 'linear-gradient(to bottom right, #10b981, #059669)',
+filter: (m) => m.genre && m.genre.includes('Ambient') && !m.isPhoto,
+isFullPage: false,
+limit: 3
+},
+];
+
+function loadFromStorage() {
+try {
+const savedHistory = localStorage.getItem('watchHistory');
+const savedList = localStorage.getItem('myList');
+const savedVideos = localStorage.getItem('videos');
+const savedLikes = localStorage.getItem('likedPhotos');
+
+if (savedVideos) videos = JSON.parse(savedVideos);
+if (savedHistory) watchHistory = JSON.parse(savedHistory);
+if (savedList) myList = JSON.parse(savedList);
+if (savedLikes) likedPhotos = JSON.parse(savedLikes);
+} catch (e) {
+console.error('Error loading from storage:', e);
+}
+}
+
+function saveToStorage() {
+try {
+localStorage.setItem('watchHistory', JSON.stringify(watchHistory));
+localStorage.setItem('myList', JSON.stringify(myList));
+localStorage.setItem('videos', JSON.stringify(videos));
+localStorage.setItem('likedPhotos', JSON.stringify(likedPhotos));
+} catch (e) {
+console.error('Error saving to storage:', e);
+}
+}
+
+// --- CENTRALIZED DATA DEFINITION (5 Videos + 5 Photos) ---
+function initializeDefaultVideos() {
+// NOTE: ID 5 and ID 101 use publicly available placeholder URLs for DEMONSTRATION
+// purposes in this environment. The rest use local paths for your VS Code environment.
+const mediaData = [
+// 5 Cinematic Videos
+{
+id: 5,
+title: 'the forest',
+genre: 'Nature Cinematic, Ambient',
+year: 2025,
+duration: '0:31 sec',
+music: ['Ethereal Synth', 'Deep Ambient'],
+color: 'bg-gradient-10',
+featured: true,
+videoSrc: '17.mp4',
+portraitSrc: 'landscape_17.jpg',
+landscapeSrc: 'portrait_17.jpg'
+},
+{
+id: 4,
+title: 'City Rooftop Parkour',
+genre: 'Action, Extreme',
+year: 2025,
+duration: '1:11 min',
+music: ['Punk Rock', 'Fast Drum Beat'],
+color: 'bg-gradient-9',
+videoSrc: '17.mp4',
+portraitSrc: 'landscape_17.jpg',
+landscapeSrc: 'portrait_17.jpg'
+},
+{
+id: 3,
+title: 'Slow Motion Espresso',
+genre: 'Ambient, Food',
+year: 2025,
+duration: '2:05 min',
+music: ['Chill-hop', 'Rainy Day Jazz'],
+color: 'bg-gradient-8',
+videoSrc: '17.mp4',
+portraitSrc: 'landscape_17.jpg',
+landscapeSrc: 'portrait_17.jpg'
+},
+{
+id: 2,
+title: 'Surreal VJ Loops',
+genre: 'Art, VFX',
+year: 2025,
+duration: '1:49 min',
+music: ['Electronic Pulse', 'Psychedelic Vibe'],
+color: 'bg-gradient-7',
+videoSrc: '17.mp4',
+portraitSrc: 'landscape_17.jpg',
+landscapeSrc: 'portrait_17.jpg'
+},
+{
+id: 1,
+title: 'Volcano Sunrise Hike',
+genre: 'Nature Cinematic',
+year: 2024,
+duration: '1:33 min',
+music: ['Flute Melody', 'Gentle Wind'],
+color: 'bg-gradient-6',
+videoSrc: '17.mp4',
+portraitSrc: 'landscape_17.jpg',
+landscapeSrc: 'portrait_17.jpg'
+},
+
+// 5 Photography items
+{
+id: 105,
+title: 'Food Styling',
+genre: 'Photography',
+year: 2022,
+date: 'Mar 15, 2022',
+music: ['Upbeat Funk'],
+color: 'bg-gradient-4',
+isPhoto: true,
+imageSrc: 'portrait_17.jpg'
+},
+{
+id: 104,
+title: 'Morning Mist',
+genre: 'Photography',
+year: 2023,
+date: 'Oct 02, 2023',
+music: ['Soft Flute'],
+color: 'bg-gradient-3',
+isPhoto: true,
+imageSrc: 'portrait_17.jpg'
+},
+{
+id: 103,
+title: 'Industrial Decay',
+genre: 'Photography',
+year: 2023,
+date: 'Jan 20, 2023',
+music: ['Heavy Noise'],
+color: 'bg-gradient-2',
+isPhoto: true,
+imageSrc: 'portrait_17.jpg'
+},
+{
+id: 102,
+title: 'Mountain Silhouettes',
+genre: 'Photography',
+year: 2023,
+date: 'Apr 01, 2023',
+music: ['Epic Strings'],
+color: 'bg-gradient-1',
+isPhoto: true,
+imageSrc: 'landscape_17.jpg'
+},
+{
+id: 101,
+title: 'Desert Night Sky',
+genre: 'Photography',
+year: 2024,
+date: 'Feb 10, 2024',
+music: ['Deep Space Drone'],
+color: 'bg-gradient-5',
+isPhoto: true,
+// DEMO: Public URL
+imageSrc: 'https://placehold.co/400x533/fb923c/ffffff?text=DESERT+PHOTO'
+},
+];
+
+videos = mediaData;
+saveToStorage();
+}
+// --- END CENTRALIZED DATA DEFINITION ---
+
+function isPhotoLiked(photoId) {
+return likedPhotos.includes(photoId);
+}
+
+function togglePhotoLike(photoId) {
+const index = likedPhotos.indexOf(photoId);
+if (index > -1) {
+likedPhotos.splice(index, 1);
+} else {
+likedPhotos.push(photoId);
+}
+saveToStorage();
+
+// Re-render current page to update like status
+if (currentPage === 'home') {
+renderHomePage();
+}
+// If photo viewer is open, refresh it to show updated like status
+const modal = document.getElementById('photoViewerModal');
+if (!modal.classList.contains('hidden') && modal.dataset.itemId == photoId) {
+openPhotoViewer(photoId);
+}
+}
+
+/**
+* Parses a duration string (e.g., '1:58 min') into total seconds.
+*/
+function parseDurationToSeconds(duration) {
+if (!duration) return 120; // Default 2 minutes
+const parts = duration.replace(' min', '').split(':');
+if (parts.length === 2) {
+return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+}
+return 120;
+}
+
+/**
+* Formats seconds into MM:SS string.
+*/
+function formatSecondsToTime(seconds) {
+const mins = Math.floor(seconds / 60);
+const secs = seconds % 60;
+return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+}
+
+/**
+* Adds a video to watch history with simulated watch progress.
+*/
+function addToWatchHistory(video) {
+const item = videos.find(v => v.id === video.id);
+if (!item) return;
+
+// Remove existing entry
+watchHistory = watchHistory.filter(m => m.id !== item.id);
+
+// --- Simulated Progress Calculation ---
+const totalSeconds = parseDurationToSeconds(item.duration);
+// Watch between 10% and 70% of the video
+const minWatchedSeconds = Math.floor(totalSeconds * 0.1);
+const maxWatchedSeconds = Math.floor(totalSeconds * 0.7);
+const watchedSeconds = Math.floor(Math.random() * (maxWatchedSeconds - minWatchedSeconds)) + minWatchedSeconds;
+
+const watchedTimeText = `${formatSecondsToTime(watchedSeconds)} of ${item.duration.replace(' min', '')}`;
+const watchedProgressPercentage = Math.min(100, Math.round((watchedSeconds / totalSeconds) * 100));
+// --- End Simulated Progress Calculation ---
+
+
+const historyItem = {
+...item,
+watchedAt: new Date().toISOString(),
+watchedTime: watchedTimeText,
+progress: watchedProgressPercentage
+};
+
+watchHistory.unshift(historyItem);
+watchHistory = watchHistory.slice(0, 10);
+saveToStorage();
+
+// Re-render relevant pages immediately
+if (currentPage === 'recent') {
+renderRecentPage();
+} else if (currentPage === 'home') {
+renderHomePage();
+}
+}
+
+function clearWatchHistory() {
+watchHistory = [];
+saveToStorage();
+renderRecentPage();
+}
+
+function toggleMyList(itemId) {
+const item = videos.find(m => m.id === itemId);
+if (!item) return;
+
+const index = myList.findIndex(m => m.id === itemId);
+if (index > -1) {
+myList.splice(index, 1);
+} else {
+myList.push(item);
+}
+saveToStorage();
+}
+
+function isInMyList(itemId) {
+return myList.some(m => m.id === itemId);
+}
+
+// --- CAROUSEL FUNCTIONS ---
+function stopCarousel() {
+clearInterval(carouselInterval);
+}
+
+function startCarousel() {
+stopCarousel();
+if (featuredVideos.length <= 1) return;
+
+carouselInterval = setInterval(() => {
+let nextIndex = currentSlideIndex + 1;
+if (nextIndex >= featuredVideos.length) {
+nextIndex = 0;
+}
+showSlide(nextIndex);
+}, 4000);
+}
+
+function showSlide(index) {
+currentSlideIndex = index;
+const track = document.getElementById('carouselTrack');
+if (!track) return;
+
+const containerWidth = track.parentElement.clientWidth;
+const translateDistance = index * containerWidth;
+
+track.style.transform = `translateX(-${translateDistance}px)`;
+
+document.querySelectorAll('.indicator-dot').forEach((dot, i) => {
+dot.classList.toggle('active', i === index);
+});
+}
+
+function renderFeaturedSectionSlide(video) {
+const inList = isInMyList(video.id);
+const slideWidthPercentage = 100 / featuredVideos.length;
+
+// Set CSS variable for background image path
+const backgroundStyle = `style="--bg-image: url('${video.landscapeSrc}'), ${video.color.split(',').slice(0, 1).join(',')} 50%)"`;
+
+return `
+<div class="carousel-slide" style="width: ${slideWidthPercentage}%;" >
+<div class="featured-bg ${video.color}" ${backgroundStyle}>
+<div class="featured-bg-text">${video.title.substring(0, 1)}</div>
+<div class="featured-overlay"></div>
+</div>
+<div class="featured-content">
+<h1 class="featured-title">${video.title.toUpperCase()}</h1>
+<div class="featured-buttons">
+<button class="btn-watch" onclick="event.stopPropagation(); openModal(${video.id});">
+<svg class="icon icon-sm icon-fill" viewBox="0 0 24 24">
+<polygon points="5 3 19 12 5 21 5 3"></polygon>
+</svg>
+Watch Now
+</button>
+<button class="btn-add ${inList ? 'in-list' : ''}" onclick="event.stopPropagation(); toggleMyListAndRefresh(${video.id});">
+<svg class="icon icon-sm" viewBox="0 0 24 24">
+<line x1="12" y1="5" x2="12" y2="19"></line>
+<line x1="5" y1="12" x2="19" y2="12"></line>
+</svg>
+</button>
+</div>
+</div>
+</div>
+`;
+}
+// --- END CAROUSEL FUNCTIONS ---
+
+
+// --- PAGE NAVIGATION & EVENT LISTENERS ---
+function init() {
+loadFromStorage();
+if (videos.length === 0) {
+initializeDefaultVideos();
+}
+
+const videoOnly = videos.filter(v => !v.isPhoto).sort((a, b) => b.id - a.id);
+featuredVideos = videoOnly.slice(0, 4);
+
+renderHomePage();
+attachEventListeners();
+
+if (currentPage === 'home') {
+startCarousel();
+}
+}
+
+function attachEventListeners() {
+const searchInput = document.getElementById('searchInput');
+if (searchInput) {
+searchInput.addEventListener('input', renderSearchPage);
+}
+
+const photoViewer = document.getElementById('photoViewerContent');
+if (photoViewer) {
+photoViewer.addEventListener('click', setupPhotoViewerInteraction);
+photoViewer.addEventListener('touchstart', setupPhotoViewerInteraction);
+}
+}
+
+function setupPhotoViewerInteraction() {
+const closeBtn = document.getElementById('photoViewerCloseButton');
+const metadataDiv = document.getElementById('photoViewerMetadata');
+
+clearTimeout(hideControlsTimeout);
+
+if(closeBtn && metadataDiv) {
+closeBtn.style.opacity = '1';
+metadataDiv.style.opacity = '1';
+
+hideControlsTimeout = setTimeout(() => {
+closeBtn.style.opacity = '0';
+metadataDiv.style.opacity = '0';
+}, FADE_DURATION);
+}
+}
+
+function showPage(page) {
+currentPage = page;
+// Hide all pages
+document.getElementById('homePage').classList.add('hidden');
+document.getElementById('searchPage').classList.add('hidden');
+document.getElementById('recentPage').classList.add('hidden');
+document.getElementById('allVideosPage').classList.add('hidden');
+
+// Deactivate all nav items
+document.querySelectorAll('.nav-item').forEach(item => {
+item.classList.remove('active');
+});
+
+stopCarousel();
+closePhotoViewer();
+closeModal(); // Close detail modal on navigation
+
+if (page === 'home') {
+document.getElementById('homePage').classList.remove('hidden');
+document.querySelectorAll('.nav-item')[0].classList.add('active');
+renderHomePage();
+startCarousel();
+} else if (page === 'search') {
+document.getElementById('searchPage').classList.remove('hidden');
+document.querySelectorAll('.nav-item')[1].classList.add('active');
+renderSearchPage();
+} else if (page === 'recent') {
+document.getElementById('recentPage').classList.remove('hidden');
+document.querySelectorAll('.nav-item')[2].classList.add('active');
+renderRecentPage();
+} else if (page === 'allVideos') {
+// Fix for View All button
+document.getElementById('allVideosPage').classList.remove('hidden');
+renderAllVideosPage();
+}
+}
+
+function toggleMyListAndRefresh(itemId) {
+toggleMyList(itemId);
+
+// Re-render the current view to update the heart/add icon state instantly
+if (currentPage === 'home') {
+renderHomePage();
+showSlide(currentSlideIndex);
+} else if (currentPage === 'search') {
+renderSearchPage();
+} else if (currentPage === 'recent') {
+renderRecentPage();
+}
+// If modal is open, re-open it to refresh state
+const modal = document.getElementById('movieModal');
+if (!modal.classList.contains('hidden')) {
+openModal(itemId);
+}
+}
+
+function searchGenre(genre) {
+const searchInput = document.getElementById('searchInput');
+if (searchInput) {
+searchInput.value = genre;
+renderSearchPage();
+showPage('search'); // Ensure search page is visible
+}
+}
+// --- END PAGE NAVIGATION & EVENT LISTENERS ---
+
+
+// --- RENDERING HELPERS ---
+
+function createCollectionCard(collection) {
+const allItems = videos.filter(collection.filter);
+const showViewAllButton = collection.isFullPage;
+const displayItems = allItems.slice(0, collection.limit);
+
+let itemsHtml = displayItems.map((item) => {
+const musicInfo = item.music ? item.music.slice(0, 1).join(', ') : 'No Music';
+
+return `
+<div class="collection-item" onclick="openModal(${item.id})">
+<div class="collection-thumb ${item.color}">
+<span class="collection-thumb-text">${item.title.substring(0, 1)}</span>
+</div>
+<div class="collection-item-info">
+<h4 class="collection-item-title">${item.title}</h4>
+<p class="collection-item-meta">${musicInfo} • ${item.year}</p>
+</div>
+</div>
+`;
+}).join('');
+
+const cardId = `collection-${collection.id}`;
+
+return `
+<div class="collection-card" id="${cardId}" style="background: ${collection.color};">
+<h3 class="collection-title">${collection.title}</h3>
+<div class="collection-items">
+${itemsHtml}
+</div>
+${showViewAllButton ? `<button class="view-more" onclick="showPage('allVideos')">View All →</button>` : ''}
+</div>
+`;
+}
+
+function createPhotoCard(photo) {
+const musicInfo = photo.music ? photo.music.slice(0, 1).join(', ') : '';
+const liked = isPhotoLiked(photo.id);
+
+// Set CSS variable for background image path
+const backgroundStyle = `style="--bg-image: url('${photo.imageSrc}'), ${photo.color.split(',').slice(0, 1).join(',')} 50%)"`;
+
+
+return `
+<div class="photo-card" onclick="openModal(${photo.id})">
+<div class="photo-card-inner ${photo.color}" ${backgroundStyle}>
+<div class="photo-card-fallback-text">${photo.title.substring(0, 1)}</div>
+<div class="photo-card-actions">
+<button
+class="photo-card-like-btn ${liked ? 'liked' : ''}"
+onclick="event.stopPropagation(); togglePhotoLike(${photo.id});"
+>
+<svg class="icon icon-sm icon-fill" viewBox="0 0 24 24">
+<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+</svg>
+</button>
+</div>
+<div class="photo-card-content">
+<div class="photo-card-title">${photo.title}</div>
+<div class="photo-card-meta">${photo.date || photo.year} / ${musicInfo}</div>
+</div>
+</div>
+</div>
+`;
+}
+
+function createMovieCard(video, showProgress = false, size = 'medium') {
+const inList = isInMyList(video.id);
+// Check if it's in history AND has detailed watched time
+const showProgressContent = showProgress && video.watchedTime && video.progress !== undefined;
+
+// Progress Bar HTML with detailed watched time
+const progressHtml = showProgressContent ? `
+<div class="progress-container">
+<div class="progress-wrapper">
+<div class="progress-bar">
+<div class="progress-fill" style="width: ${video.progress}%"></div>
+</div>
+<div class="time-left">${video.watchedTime}</div>
+</div>
+</div>
+` : '';
+
+const infoHtml = !showProgress ? `
+<div class="movie-info">
+<h3 class="movie-title">${video.title}</h3>
+<p class="movie-duration">${video.duration}</p>
+</div>
+` : '';
+
+// Use portraitSrc for the card background
+const backgroundStyle = `style="--bg-image: url('${video.portraitSrc}'), ${video.color.split(',').slice(0, 1).join(',')} 50%)"`;
+
+return `
+<div class="movie-card ${size}">
+<div class="movie-card-inner" onclick="openModal(${video.id})">
+<div class="movie-card-bg ${video.color}" ${backgroundStyle}>
+<div class="movie-initial">${video.title.substring(0, 1)}</div>
+<div class="movie-title-card">${video.title}</div>
+</div>
+${progressHtml}
+<button class="movie-card-add-btn" onclick="event.stopPropagation(); toggleMyListAndRefresh(${video.id});">
+<svg class="icon icon-sm ${inList ? 'icon-fill' : ''}" viewBox="0 0 24 24" style="color: ${inList ? '#4ade80' : 'white'}">
+<line x1="12" y1="5" x2="12" y2="19"></line>
+<line x1="5" y1="12" x2="19" y2="12"></line>
+</svg>
+</button>
+<div class="movie-card-play">
+<svg class="icon icon-lg play-icon-large" viewBox="0 0 24 24">
+<polygon points="5 3 19 12 5 21 5 3" fill="white"></polygon>
+</svg>
+</div>
+</div>
+${infoHtml}
+</div>
+`;
+}
+
+function createAllVideosGridItem(video) {
+// Use portraitSrc for the card background
+const backgroundStyle = `style="--bg-image: url('${video.portraitSrc}'), ${video.color.split(',').slice(0, 1).join(',')} 50%)"`;
+
+return `
+<div class="grid-card" onclick="openModal(${video.id})">
+<div class="grid-card-inner">
+<div class="movie-card-bg ${video.color}" ${backgroundStyle}>
+<div class="movie-initial" style="font-size: 1.5rem;">${video.title.substring(0, 1)}</div>
+<div class="movie-title-card">${video.duration}</div>
+</div>
+<div class="movie-card-play">
+<svg class="icon icon-lg play-icon-large" viewBox="0 0 24 24">
+<polygon points="5 3 19 12 5 21 5 3" fill="white"></polygon>
+</svg>
+</div>
+</div>
+<div class="grid-card-info">
+<div class="grid-card-title">${video.title}</div>
+</div>
+</div>
+`;
+}
+// --- END RENDERING HELPERS ---
+
+
+// --- MAIN RENDER FUNCTIONS ---
+function renderHomePage() {
+const videoOnly = videos.filter(v => !v.isPhoto).sort((a, b) => b.id - a.id);
+const continueWatching = watchHistory.filter(v => !v.isPhoto).slice(0, 5);
+const latestVideos = videoOnly.slice(0, 5);
+const photographyItems = videos.filter(v => v.isPhoto);
+
+let html = '';
+
+// Featured Section (Carousel)
+if (featuredVideos.length > 0) {
+html += `
+<div class="featured-section">
+<div class="carousel-slide-container">
+<div id="carouselTrack" class="carousel-track" style="width: ${featuredVideos.length * 100}%;">
+${featuredVideos.map((video, index) => renderFeaturedSectionSlide(video, index)).join('')}
+</div>
+</div>
+<div class="carousel-indicators">
+${featuredVideos.map((_, index) => `<div class="indicator-dot ${index === currentSlideIndex ? 'active' : ''}" onclick="showSlide(${index})"></div>`).join('')}
+</div>
+</div>
+`;
+}
+
+// Continue Watching
+if (continueWatching.length > 0) {
+html += `
+<div class="section">
+<h2 class="section-title">Continue Watching</h2>
+<div class="movie-row">
+${continueWatching.map(video => createMovieCard(video, true, 'small')).join('')}
+</div>
+</div>
+`;
+}
+
+// Latest Videos (5 items)
+html += `
+<div class="section">
+<h2 class="section-title">Latest Videos</h2>
+<div class="movie-row">
+${latestVideos.map(video => createMovieCard(video, false)).join('')}
+</div>
+</div>
+`;
+
+// Collections
+html += `
+<div class="section">
+<h2 class="section-title">Collections For You</h2>
+<div class="collection-row">
+${collectionsData.map(collection => createCollectionCard(collection)).join('')}
+</div>
+</div>
+`;
+
+// Photography Showcase Section
+if (photographyItems.length > 0) {
+html += `
+<div class="section">
+<h2 class="section-title">Photography Showcase</h2>
+<div class="photography-row">
+${photographyItems.map(photo => createPhotoCard(photo)).join('')}
+</div>
+</div>
+`;
+}
+
+document.getElementById('homePage').innerHTML = html;
+}
+
+function renderAllVideosPage() {
+const gridDiv = document.getElementById('allVideosGrid');
+const videoOnly = videos.filter(v => !v.isPhoto);
+
+if (gridDiv) {
+gridDiv.innerHTML = videoOnly.map(video => createAllVideosGridItem(video)).join('');
+}
+}
+
+function renderSearchPage() {
+const searchInput = document.getElementById('searchInput');
+if (!searchInput) return;
+
+const query = searchInput.value.toLowerCase();
+const resultsDiv = document.getElementById('searchResults');
+
+if (query) {
+const filteredItems = videos.filter(item =>
+item.title.toLowerCase().includes(query) ||
+item.genre.toLowerCase().includes(query) ||
+(item.music && item.music.some(m => m.toLowerCase().includes(query)))
+);
+
+let html = `
+<h2 class="search-results-title">Search Results (${filteredItems.length})</h2>
+<div class="movie-row">
+${filteredItems.map(item => createMovieCard(item, false, 'small')).join('')}
+</div>
+`;
+
+if (filteredItems.length === 0) {
+html += `<div class="no-results">No videos or photos found for "${query}"</div>`;
+}
+
+resultsDiv.innerHTML = html;
+} else {
+resultsDiv.innerHTML = `
+<h2 class="search-results-title">Popular Searches</h2>
+<div class="popular-searches">
+${['Nature Cinematic', 'Action', 'Ambient', 'Photography', 'VFX'].map(genre => `
+<button class="genre-btn" onclick="searchGenre('${genre}')">${genre}</button>
+`).join('')}
+</div>
+`;
+}
+}
+
+function renderRecentPage() {
+const historyDiv = document.getElementById('historyList');
+const myListDiv = document.getElementById('myListSection');
+
+const videoHistory = watchHistory.filter(v => !v.isPhoto);
+const videoMyList = myList.filter(v => !v.isPhoto);
+
+// Watch History
+if (videoHistory.length > 0) {
+historyDiv.innerHTML = `
+<div class="recent-header">
+<h2 class="section-title" style="margin-bottom: 0;">Watch History</h2>
+<button class="btn-clear" onclick="clearWatchHistory()">Clear History</button>
+</div>
+<div class="movie-row" style="margin-bottom: 2rem;">
+${videoHistory.map(video => createMovieCard(video, true, 'small')).join('')}
+</div>
+`;
+} else {
+historyDiv.innerHTML = `
+<div class="recent-header">
+<h2 class="section-title" style="margin-bottom: 0;">Watch History</h2>
+</div>
+<div class="empty-state">
+<svg class="icon empty-icon" viewBox="0 0 24 24">
+<circle cx="12" cy="12" r="10"></circle>
+<polyline points="12 6 12 12 16 14"></polyline>
+</svg>
+<p>No watch history yet</p>
+<p style="font-size: 0.875rem; margin-top: 0.5rem;">Videos you watch will appear here</p>
+</div>
+`;
+}
+
+// My List
+if (videoMyList.length > 0) {
+myListDiv.innerHTML = `
+<h2 class="section-title">My List</h2>
+<div class="movie-row">
+${videoMyList.map(video => createMovieCard(video, false, 'small')).join('')}
+</div>
+`;
+} else {
+myListDiv.innerHTML = `
+<h2 class="section-title" style="margin-top: 2rem;">My List</h2>
+<div class="empty-state">
+<svg class="icon empty-icon" viewBox="0 0 24 24">
+<path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+</svg>
+<p>Your list is empty</p>
+<p style="font-size: 0.875rem; margin-top: 0.5rem;">Add videos to watch later</p>
+</div>
+`;
+}
+}
+// --- END MAIN RENDER FUNCTIONS ---
+
+
+// --- MODAL & PLAYER LOGIC ---
+function openVideoPlayer(itemId) {
+const item = videos.find(m => m.id === itemId);
+if (!item || item.isPhoto || !item.videoSrc) {
+console.error("Video item not found, is a photo, or has no source.");
+return;
+}
+
+// USE LOCAL VIDEO SRC PATH AS REQUESTED
+const videoSource = item.videoSrc;
+
+const playerModal = document.getElementById('videoPlayerModal');
+const iframe = document.getElementById('videoIframe');
+
+iframe.src = videoSource;
+playerModal.classList.remove('hidden');
+document.body.style.overflow = 'hidden';
+
+addToWatchHistory(item);
+closeModal();
+}
+
+function closeVideoPlayer() {
+const playerModal = document.getElementById('videoPlayerModal');
+const iframe = document.getElementById('videoIframe');
+
+iframe.src = "";
+
+playerModal.classList.add('hidden');
+document.body.style.overflow = '';
+}
+
+function watchMovie(itemId) {
+const item = videos.find(m => m.id === itemId);
+if (item && !item.isPhoto) {
+openVideoPlayer(itemId);
+} else if (item && item.isPhoto) {
+openPhotoViewer(itemId);
+}
+}
+
+function openPhotoViewer(photoId) {
+const photo = videos.find(m => m.id === photoId);
+if (!photo || !photo.isPhoto) return;
+
+const modal = document.getElementById('photoViewerModal');
+const imageDiv = document.getElementById('photoViewerImage');
+const metadataDiv = document.getElementById('photoViewerMetadata');
+const isLiked = isPhotoLiked(photo.id);
+
+modal.dataset.itemId = photo.id;
+
+// Set the background image and color fallback
+const backgroundStyle = `style="--bg-image: url('${photo.imageSrc}'), ${photo.color.split(',').slice(0, 1).join(',')} 50%)"`;
+
+imageDiv.className = `photo-viewer-image ${photo.color}`;
+imageDiv.style.cssText = backgroundStyle;
+
+// Re-generate inner content to update the like button state instantly
+imageDiv.innerHTML = `
+<div class="photo-viewer-placeholder-content">
+<span>PHOTO</span>
+<span style="font-size: 1rem; opacity: 0.8;">3024 x 4032</span>
+</div>
+<!-- Like button added to the viewer as well -->
+<button
+class="player-close-btn"
+style="top: 2rem; right: 1rem; left: auto; color: ${isLiked ? '#ef4444' : 'white'};"
+onclick="event.stopPropagation(); togglePhotoLike(${photo.id}); openPhotoViewer(${photo.id});"
+>
+<svg class="icon" viewBox="0 0 24 24" style="fill: ${isLiked ? '#ef4444' : 'none'};">
+<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+</svg>
+</button>
+`;
+
+metadataDiv.innerHTML = `
+<div class="photo-viewer-title">${photo.title}</div>
+<div class="photo-viewer-date">${photo.date || photo.year}</div>
+`;
+
+document.body.style.overflow = 'hidden';
+modal.classList.remove('hidden');
+
+setupPhotoViewerInteraction();
+}
+
+function closePhotoViewer() {
+clearTimeout(hideControlsTimeout);
+document.getElementById('photoViewerModal').classList.add('hidden');
+document.body.style.overflow = '';
+}
+
+function openModal(itemId) {
+const item = videos.find(m => m.id === itemId);
+if (!item) return;
+
+if (item.isPhoto) {
+openPhotoViewer(itemId);
+return;
+}
+
+// Video Details Modal
+const modal = document.getElementById('movieModal');
+const modalHero = document.getElementById('modalHero');
+const modalBody = document.getElementById('modalBody');
+
+const watchButtonText = 'Start Playback';
+const durationDisplay = item.duration;
+const genreDisplay = item.genre;
+const typeLabel = 'About';
+const description = `This ${item.genre} cinematic video was released in ${item.year}. It's a short, engaging ${item.duration} clip designed for immersive viewing.`;
+
+document.body.style.overflow = 'hidden';
+
+// Set Hero background using landscapeSrc path
+const heroBackgroundStyle = `style="--bg-image: url('${item.landscapeSrc}'), ${item.color.split(',').slice(0, 1).join(',')} 50%)"`;
+
+modalHero.className = `modal-hero ${item.color}`;
+modalHero.style.cssText = heroBackgroundStyle;
+
+// Set Hero content to gradient fallback
+modalHero.innerHTML = `
+<div class="modal-hero-text">${item.title.substring(0, 1)}</div>
+<div class="featured-overlay"></div>
+`;
+
+const inList = isInMyList(item.id);
+
+modalBody.innerHTML = `
+<h2 class="modal-title">${item.title}</h2>
+<div class="modal-meta">
+<span>${item.year}</span>
+<span>•</span>
+<span>${durationDisplay}</span>
+<span>•</span>
+<span>${genreDisplay}</span>
+</div>
+<div class="modal-buttons">
+<button class="modal-btn-watch" onclick="watchMovie(${item.id})">
+<svg class="icon icon-sm icon-fill" viewBox="0 0 24 24">
+<polygon points="5 3 19 12 5 21 5 3"></polygon>
+</svg>
+${watchButtonText}
+</button>
+<button class="modal-btn-add ${inList ? 'in-list' : ''}" onclick="toggleMyListAndRefresh(${item.id});">
+<svg class="icon icon-sm" viewBox="0 0 24 24">
+<line x1="12" y1="5" x2="12" y2="19"></line>
+<line x1="5" y1="12" x2="19" y2="12"></line>
+</svg>
+</button>
+</div>
+<div class="modal-section">
+<h3 class="modal-section-title">Music Tracks</h3>
+<div class="language-tags">
+${item.music.map(music => `<span class="language-tag">${music}</span>`).join('')}
+</div>
+</div>
+<div class="modal-section">
+<h3 class="modal-section-title">${typeLabel}</h3>
+<p class="modal-description">
+${description}
+</p>
+</div>
+`;
+
+modal.classList.remove('hidden');
+}
+
+function closeModal() {
+document.getElementById('movieModal').classList.add('hidden');
+document.body.style.overflow = '';
+}
+
+// Initialize app when DOM is ready
+if (document.readyState === 'loading') {
+document.addEventListener('DOMContentLoaded', init);
+} else {
+init();
+}
+</script>
+</body>
+</html>
+
